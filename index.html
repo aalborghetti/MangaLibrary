@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MangaTracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <div class="header-brand">
+        <span class="header-icon">漫</span>
+        <h1>MangaTracker</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" id="syncBtn" title="Ricarica da repository (data.json)">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </button>
+        <button class="btn-icon" id="importBtn" title="Importa JSON">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <button class="btn-icon" id="exportBtn" title="Esporta JSON">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button class="btn-primary" id="addBtn">+ Aggiungi Serie</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Tutto</button>
+        <button class="filter-btn" data-filter="da_iniziare">Da iniziare</button>
+        <button class="filter-btn" data-filter="in_corso">In corso</button>
+        <button class="filter-btn" data-filter="finita">Finita</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-value" id="totalCount">0</span>
+          <span class="stat-label">serie</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value stat-orange" id="inCorsoCount">0</span>
+          <span class="stat-label">in lettura</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value stat-green" id="finitaCount">0</span>
+          <span class="stat-label">complete</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">漫</div>
+      <h2>La tua libreria è vuota</h2>
+      <p>Aggiungi la tua prima serie manga per iniziare a tracciare la tua lettura.</p>
+      <button class="btn-primary" onclick="document.getElementById('addBtn').click()">+ Aggiungi Serie</button>
+    </div>
+  </main>
+
+  <!-- Modal aggiunta/modifica serie -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Aggiungi Serie</h2>
+        <button class="close-btn" id="closeAddModal">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="wiki-search-section">
+          <label class="section-label">Cerca su Wikipedia</label>
+          <div class="wiki-search-row">
+            <input type="text" id="wikiSearch" placeholder="es. Berserk, One Piece, Vinland Saga...">
+            <button id="wikiSearchBtn">Cerca</button>
+          </div>
+          <div id="wikiResults" class="wiki-results"></div>
+        </div>
+
+        <div class="form-divider"><span>Dettagli serie</span></div>
+
+        <form id="seriesForm">
+          <input type="hidden" id="editId">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Titolo *</label>
+              <input type="text" id="titleInput" required placeholder="Titolo della serie">
+            </div>
+            <div class="form-group form-group-small">
+              <label>Stato</label>
+              <select id="statusInput">
+                <option value="da_iniziare">Da iniziare</option>
+                <option value="in_corso">In corso</option>
+                <option value="finita">Finita</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Numero di volumi</label>
+            <input type="number" id="volumesInput" min="1" max="999" value="1">
+          </div>
+          <div class="form-group">
+            <label>Pagina volumi Wikipedia</label>
+            <div class="wiki-search-row">
+              <input type="text" id="volWikiSearch" placeholder="Cerca pagina capitoli...">
+              <button type="button" id="volWikiSearchBtn">Cerca</button>
+            </div>
+            <div id="volWikiResults" class="wiki-results"></div>
+            <div class="wiki-search-row vol-url-row" id="volUrlRow" style="display:none">
+              <input type="url" id="volWikiInput" placeholder="https://it.wikipedia.org/wiki/Capitoli_di_..." readonly>
+              <button type="button" id="loadVolumesBtn">Carica</button>
+            </div>
+            <span class="form-hint" id="volLoadStatus"></span>
+          </div>
+          <div class="form-group">
+            <label>URL Copertina</label>
+            <input type="url" id="coverInput" placeholder="https://...">
+          </div>
+          <div class="cover-preview-wrap" id="coverPreviewWrap" style="display:none">
+            <img id="coverPreview" src="" alt="Anteprima copertina">
+          </div>
+          <div class="form-group">
+            <label>Riassunto</label>
+            <textarea id="summaryInput" rows="4" placeholder="Trama della serie..."></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="cancelAdd">Annulla</button>
+            <button type="submit" class="btn-primary">Salva</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal dettaglio serie -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2 id="detailTitle"></h2>
+        <div class="modal-header-actions">
+          <button class="btn-icon btn-icon-sm" id="editSeriesBtn" title="Modifica">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-icon btn-icon-sm btn-danger" id="deleteSeriesBtn" title="Elimina">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+          <button class="close-btn" id="closeDetailModal">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body detail-body">
+        <div class="detail-left">
+          <div class="detail-cover-wrap">
+            <img id="detailCover" src="" alt="">
+            <div class="detail-cover-placeholder" id="detailCoverPlaceholder">漫</div>
+          </div>
+          <span class="status-badge" id="detailStatusBadge"></span>
+          <div class="detail-progress-block">
+            <div class="detail-progress-label">
+              <span id="detailProgressText"></span>
+              <span id="detailProgressPct"></span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="detailProgressFill"></div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-right">
+          <p class="detail-summary" id="detailSummary"></p>
+          <div class="volumes-header">
+            <h3>Volumi</h3>
+            <div class="volumes-actions">
+              <button id="markAllReadBtn" class="btn-small">Tutti letti</button>
+              <button id="markAllUnreadBtn" class="btn-small btn-secondary">Tutti non letti</button>
+            </div>
+          </div>
+          <div class="volumes-grid" id="detailVolumes"></div>
+          <div id="volDescPanel" class="vol-desc-panel" hidden>
+            <div class="vol-desc-head">
+              <strong id="volDescNum"></strong>
+              <button type="button" id="volToggleReadBtn" class="btn-small"></button>
+            </div>
+            <p id="volDescText"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="importInput" accept=".json" style="display:none">
+  <script src="app.js"></script>
+</body>
+</html>
